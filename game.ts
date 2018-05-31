@@ -71,23 +71,25 @@ function updateGrid(grid: Cell[][]): Cell[][] {
     const newGrid = createGrid(gridWidth, gridHeight);
     for (let i = 0; i < gridWidth; i++) {
         for (let j = 0; j < gridHeight; j++) {
-            const numberOfNeighbors = countNeighbors(grid, i, j);
-            if (!grid[i][j].isAlive && numberOfNeighbors === 3) {
-                newGrid[i][j].isAlive = true;
-                newGrid[i][j].hue = calculateAverageHue(getNeighborHues(grid, i, j));
-            } else if (grid[i][j].isAlive && (numberOfNeighbors < 2 || numberOfNeighbors > 3)) {
-                newGrid[i][j].isAlive = false;
+            const livingNeighbors = getLivingNeighbors(grid, i, j);
+            const oldCell = grid[i][j];
+            const newCell = newGrid[i][j];
+            if (!oldCell.isAlive && livingNeighbors.length === 3) {
+                newCell.isAlive = true;
+                newCell.hue = computeMeanHue(livingNeighbors.map((cell) => cell.hue));
+            } else if (oldCell.isAlive && (livingNeighbors.length < 2 || livingNeighbors.length > 3)) {
+                newCell.isAlive = false;
             } else {
-                newGrid[i][j].isAlive = grid[i][j].isAlive;
-                newGrid[i][j].hue = grid[i][j].hue;
+                newCell.isAlive = oldCell.isAlive;
+                newCell.hue = oldCell.hue;
             }
         }
     }
     return newGrid;
 }
 
-function countNeighbors(grid: Cell[][], x: number, y: number): number {
-    let numberOfNeighbors = 0;
+function getLivingNeighbors(grid: Cell[][], x: number, y: number): Cell[] {
+    const livingNeighbors: Cell[] = [];
     for (let dx = -1; dx <= 1; dx++) {
         for (let dy = -1; dy <= 1; dy++) {
             if ((dx === 0 && dy === 0) ||
@@ -95,46 +97,29 @@ function countNeighbors(grid: Cell[][], x: number, y: number): number {
                 ((y + dy < 0) || (y + dy >= gridHeight))) {
                 continue;
             }
-            if (grid[x + dx][y + dy].isAlive) {
-                numberOfNeighbors++;
+            const cell = grid[x + dx][y + dy];
+            if (cell.isAlive) {
+                livingNeighbors.push(cell);
             }
         }
     }
-    return numberOfNeighbors;
+    return livingNeighbors;
 }
 
-function getNeighborHues(grid: Cell[][], x: number, y: number): number[] {
-    const hues: number[] = [];
-    for (let dx = -1; dx <= 1; dx++) {
-        for (let dy = -1; dy <= 1; dy++) {
-            if ((dx === 0 && dy === 0) ||
-                ((x + dx < 0) || (x + dx >= gridWidth)) ||
-                ((y + dy < 0) || (y + dy >= gridHeight))) {
-                continue;
-            }
-            if (grid[x + dx][y + dy].isAlive) {
-                hues.push(grid[x + dx][y + dy].hue);
-            }
-        }
-    }
-    return hues;
-}
-
-function calculateAverageHue(hues: number[]): number {
+function computeMeanHue(hues: number[]): number {
     let x = 0;
     let y = 0;
     for (const hue of hues) {
         x += Math.cos(convertDegreesToRadians(hue));
         y += Math.sin(convertDegreesToRadians(hue));
     }
-    const averageHue = convertRadiansToDegrees(Math.atan2(y, x));
-    return averageHue;
+    return convertRadiansToDegrees(Math.atan2(y, x));
 }
 
 function convertDegreesToRadians(degrees: number): number {
-    return ((degrees / 360) * 2 * Math.PI);
+    return ((degrees / 180) * Math.PI);
 }
 
 function convertRadiansToDegrees(radians: number): number {
-    return ((radians / (2 * Math.PI)) * 360);
+    return ((radians / Math.PI) * 180);
 }
