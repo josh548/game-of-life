@@ -10,74 +10,83 @@ const gridPaddingHorizontal: number = Math.floor(gridWidth / 4);
 const gridPaddingVertical: number = Math.floor(gridHeight / 4);
 
 const context = canvas.getContext("2d") as CanvasRenderingContext2D;
-context.fillStyle = "#4a4a4a";
+
+interface Cell {
+    isAlive: boolean;
+    hue: number;
+}
 
 start();
 
 function start() {
-    let grid: number[][] = createGrid(gridWidth, gridHeight);
+    let grid: Cell[][] = createGrid(gridWidth, gridHeight);
     randomizeGrid(grid);
-    let hue: number = 0;
     function step() {
         drawGrid(grid);
         grid = updateGrid(grid);
         requestAnimationFrame(step);
-        hue++;
-        if (hue > 360) {
-            hue = 0;
-        }
     }
     step();
 }
 
-function createGrid(width: number, height: number): number[][] {
-    const grid: number[][] = [];
+function createGrid(width: number, height: number): Cell[][] {
+    const grid: Cell[][] = [];
     for (let i = 0; i < width; i++) {
         grid[i] = [];
         for (let j = 0; j < height; j++) {
-            grid[i][j] = 0;
+            grid[i][j] = {
+                isAlive: false,
+                hue: 0,
+            };
         }
     }
     return grid;
 }
 
-function randomizeGrid(grid: number[][]): void {
+function randomizeGrid(grid: Cell[][]): void {
     for (let i = gridPaddingHorizontal; i < (gridWidth - gridPaddingHorizontal); i++) {
         for (let j = gridPaddingVertical; j < (gridHeight - gridPaddingVertical); j++) {
-            grid[i][j] = Math.round(Math.random());
+            grid[i][j] = {
+                isAlive: (Math.round(Math.random()) === 1),
+                hue: Math.floor(Math.random() * 360),
+            };
         }
     }
 }
 
-function drawGrid(grid: number[][]): void {
-    context.clearRect(0, 0, canvas.width, canvas.height);
+function drawGrid(grid: Cell[][]): void {
+    context.fillStyle = "#000000";
+    context.fillRect(0, 0, canvas.width, canvas.height);
     for (let i = 0; i < gridWidth; i++) {
         for (let j = 0; j < gridHeight; j++) {
-            if (grid[i][j] === 1) {
+            if (grid[i][j].isAlive) {
+                context.fillStyle = `hsl(${grid[i][j].hue}, 100%, 50%)`;
                 context.fillRect(i * cellSize, j * cellSize, cellSize, cellSize);
             }
         }
     }
 }
 
-function updateGrid(grid: number[][]): number[][] {
+function updateGrid(grid: Cell[][]): Cell[][] {
     const newGrid = createGrid(gridWidth, gridHeight);
     for (let i = 0; i < gridWidth; i++) {
         for (let j = 0; j < gridHeight; j++) {
             const numberOfNeighbors = countNeighbors(grid, i, j);
-            if (grid[i][j] === 0 && numberOfNeighbors === 3) {
-                newGrid[i][j] = 1;
-            } else if (grid[i][j] === 1 && (numberOfNeighbors < 2 || numberOfNeighbors > 3)) {
-                newGrid[i][j] = 0;
+            if (!grid[i][j].isAlive && numberOfNeighbors === 3) {
+                newGrid[i][j].isAlive = true;
+                newGrid[i][j].hue = calculateAverageHue(getNeighborHues(grid, i, j));
+            } else if (grid[i][j].isAlive && (numberOfNeighbors < 2 || numberOfNeighbors > 3)) {
+                newGrid[i][j].isAlive = false;
             } else {
-                newGrid[i][j] = grid[i][j];
+                newGrid[i][j].isAlive = grid[i][j].isAlive;
+                newGrid[i][j].hue = grid[i][j].hue;
             }
         }
     }
     return newGrid;
 }
 
-function countNeighbors(grid: number[][], x: number, y: number): number {
+function countNeighbors(grid: Cell[][], x: number, y: number): number {
     let numberOfNeighbors = 0;
     for (let dx = -1; dx <= 1; dx++) {
         for (let dy = -1; dy <= 1; dy++) {
@@ -86,8 +95,46 @@ function countNeighbors(grid: number[][], x: number, y: number): number {
                 ((y + dy < 0) || (y + dy >= gridHeight))) {
                 continue;
             }
-            numberOfNeighbors += grid[x + dx][y + dy];
+            if (grid[x + dx][y + dy].isAlive) {
+                numberOfNeighbors++;
+            }
         }
     }
     return numberOfNeighbors;
+}
+
+function getNeighborHues(grid: Cell[][], x: number, y: number): number[] {
+    const hues: number[] = [];
+    for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+            if ((dx === 0 && dy === 0) ||
+                ((x + dx < 0) || (x + dx >= gridWidth)) ||
+                ((y + dy < 0) || (y + dy >= gridHeight))) {
+                continue;
+            }
+            if (grid[x + dx][y + dy].isAlive) {
+                hues.push(grid[x + dx][y + dy].hue);
+            }
+        }
+    }
+    return hues;
+}
+
+function calculateAverageHue(hues: number[]): number {
+    let x = 0;
+    let y = 0;
+    for (const hue of hues) {
+        x += Math.cos(convertDegreesToRadians(hue));
+        y += Math.sin(convertDegreesToRadians(hue));
+    }
+    const averageHue = convertRadiansToDegrees(Math.atan2(y, x));
+    return averageHue;
+}
+
+function convertDegreesToRadians(degrees: number): number {
+    return ((degrees / 360) * 2 * Math.PI);
+}
+
+function convertRadiansToDegrees(radians: number): number {
+    return ((radians / (2 * Math.PI)) * 360);
 }
