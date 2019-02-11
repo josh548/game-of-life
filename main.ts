@@ -116,13 +116,17 @@ function convertRadiansToDegrees(radians: number): number {
     return ((radians / Math.PI) * 180);
 }
 
-let grid: Cell[][] = createGrid(gridWidth, gridHeight);
-randomizeGrid(grid);
+function start() {
+    let grid: Cell[][] = createGrid(gridWidth, gridHeight);
+    randomizeGrid(grid);
 
-function animate() {
-    drawGrid(grid);
-    grid = updateGrid(grid);
-    requestAnimationFrame(animate);
+    function animate() {
+        drawGrid(grid);
+        grid = updateGrid(grid);
+        requestAnimationFrame(animate);
+    }
+
+    animate();
 }
 
-animate();
+start();
