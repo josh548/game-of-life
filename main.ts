@@ -1,6 +1,11 @@
-const canvas = document.getElementById("canvas") as HTMLCanvasElement;
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+const canvas: HTMLCanvasElement = document.querySelector("canvas")!;
+canvas.width = window.innerWidth / window.devicePixelRatio;
+canvas.height = window.innerHeight / window.devicePixelRatio;
+
+const computedWidth: number = +getComputedStyle(canvas).getPropertyValue("width").slice(0, -2);
+const computedHeight: number = +getComputedStyle(canvas).getPropertyValue("height").slice(0, -2);
+canvas.setAttribute("width", `${computedWidth * window.devicePixelRatio}px`);
+canvas.setAttribute("height", `${computedHeight * window.devicePixelRatio}px`);
 
 const cellSize: number = Math.floor(Math.min(window.innerWidth, window.innerHeight) / 100);
 const gridWidth: number = Math.floor(canvas.width / cellSize);
@@ -9,24 +14,11 @@ const gridHeight: number = Math.floor(canvas.height / cellSize);
 const gridPaddingHorizontal: number = Math.floor(gridWidth / 4);
 const gridPaddingVertical: number = Math.floor(gridHeight / 4);
 
-const context = canvas.getContext("2d") as CanvasRenderingContext2D;
+const context = canvas.getContext("2d")!;
 
 interface Cell {
     isAlive: boolean;
     hue: number;
-}
-
-start();
-
-function start() {
-    let grid: Cell[][] = createGrid(gridWidth, gridHeight);
-    randomizeGrid(grid);
-    function step() {
-        drawGrid(grid);
-        grid = updateGrid(grid);
-        requestAnimationFrame(step);
-    }
-    step();
 }
 
 function createGrid(width: number, height: number): Cell[][] {
@@ -123,3 +115,14 @@ function convertDegreesToRadians(degrees: number): number {
 function convertRadiansToDegrees(radians: number): number {
     return ((radians / Math.PI) * 180);
 }
+
+let grid: Cell[][] = createGrid(gridWidth, gridHeight);
+randomizeGrid(grid);
+
+function animate() {
+    drawGrid(grid);
+    grid = updateGrid(grid);
+    requestAnimationFrame(animate);
+}
+
+animate();
