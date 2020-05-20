@@ -1,0 +1,25 @@
+{
+  "name": "game-of-life",
+  "version": "1.0.0",
+  "description": "Colorful Game of Life implementation using HTML Canvas",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc -w",
+    "lint": "tslint -p tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/escamilla/game-of-life.git"
+  },
+  "author": "Joshua Escamilla <joshua.escamilla@selu.edu>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/escamilla/game-of-life/issues"
+  },
+  "homepage": "https://github.com/escamilla/game-of-life#readme",
+  "devDependencies": {
+    "tslint": "^6.1.2",
+    "typescript": "^3.9.3"
+  }
+}
