@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const canvas: HTMLCanvasElement = document.querySelector("canvas")!;
 canvas.width = window.innerWidth / window.devicePixelRatio;
 canvas.height = window.innerHeight / window.devicePixelRatio;
@@ -14,6 +15,7 @@ const gridHeight: number = Math.floor(canvas.height / cellSize);
 const gridPaddingHorizontal: number = Math.floor(gridWidth / 4);
 const gridPaddingVertical: number = Math.floor(gridHeight / 4);
 
+// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
 const context = canvas.getContext("2d")!;
 
 interface Cell {
